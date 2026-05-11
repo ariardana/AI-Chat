@@ -3,8 +3,7 @@ import { extractHtmlTitle, stripHtml } from "@/lib/utils";
 
 export const NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1";
 export const MODEL_FETCH_TIMEOUT_MS = 15_000;
-export const CHAT_STREAM_TIMEOUT_MS = 45_000;
-export const MINIMAX_CHAT_STREAM_TIMEOUT_MS = 30_000;
+export const CHAT_STREAM_TIMEOUT_MS = 90_000;
 export const CUSTOM_API_KEY_COOKIE = "nvidia_api_key";
 
 const fallbackCookieSecret = randomBytes(32).toString("base64url");

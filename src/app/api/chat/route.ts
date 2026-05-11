@@ -1,7 +1,6 @@
 import type { ChatApiMessage, ChatRequestBody } from "@/lib/types";
 import {
   CHAT_STREAM_TIMEOUT_MS,
-  MINIMAX_CHAT_STREAM_TIMEOUT_MS,
   NVIDIA_BASE_URL,
   getAbortReason,
   isAbortLike,
@@ -15,10 +14,8 @@ import { guardApiRequest, safeProviderErrorLabel, sanitizeErrorMessage } from "@
 import { clamp } from "@/lib/utils";
 
 export const runtime = "nodejs";
-
-function timeoutForModel(model: string) {
-  return model === "minimaxai/minimax-m2.5" ? MINIMAX_CHAT_STREAM_TIMEOUT_MS : CHAT_STREAM_TIMEOUT_MS;
-}
+export const dynamic = "force-dynamic";
+export const maxDuration = 100;
 
 async function providerError(upstream: Response, model: string) {
   const { status, cleanDetail } = await readProviderError(upstream);
@@ -90,7 +87,7 @@ export async function POST(request: Request) {
   const messages: ChatApiMessage[] = body.systemPrompt?.trim()
     ? [{ role: "system", content: body.systemPrompt.trim() }, ...body.messages]
     : body.messages;
-  const timeout = withTimeout(request.signal, timeoutForModel(model));
+  const timeout = withTimeout(request.signal, CHAT_STREAM_TIMEOUT_MS);
   const concurrent = acquireConcurrent(request, "chat-stream", 3);
   if (!concurrent.allowed) {
     timeout.cleanup();

@@ -18,7 +18,7 @@ import { cn, extractHtmlTitle, formatBytes, makeChatTitle, makeId, nowIso, strip
 const VIRTUALIZE_AFTER = 90;
 const ESTIMATED_MESSAGE_HEIGHT = 132;
 const VIRTUAL_OVERSCAN = 10;
-const CHAT_REQUEST_TIMEOUT_MS = 45_000;
+const CHAT_REQUEST_TIMEOUT_MS = 90_000;
 const MODEL_FETCH_TIMEOUT_MS = 15_000;
 const SLOW_RESPONSE_MS = 8_000;
 const NO_TOKEN_RESPONSE_MS = 10_000;
@@ -31,10 +31,6 @@ const MODEL_SUGGESTIONS = [
 
 function withDefaultModel(models: string[]) {
   return Array.from(new Set([DEFAULT_MODEL, ...models]));
-}
-
-function chatTimeoutForModel(model: string) {
-  return model === DEFAULT_MODEL ? 35_000 : CHAT_REQUEST_TIMEOUT_MS;
 }
 
 class AiRequestError extends Error {
@@ -801,8 +797,8 @@ export function ChatApp() {
     const scheduleRequestTimeout = (model: string, targetController: AbortController) => {
       clearTimer(requestTimeout);
       requestTimeout = window.setTimeout(() => {
-        targetController.abort(new DOMException(`Chat request exceeded ${Math.round(chatTimeoutForModel(model) / 1000)} seconds.`, "TimeoutError"));
-      }, chatTimeoutForModel(model));
+        targetController.abort(new DOMException(`Chat request exceeded ${Math.round(CHAT_REQUEST_TIMEOUT_MS / 1000)} seconds.`, "TimeoutError"));
+      }, CHAT_REQUEST_TIMEOUT_MS);
     };
 
     abortControllerRef.current = controller;
