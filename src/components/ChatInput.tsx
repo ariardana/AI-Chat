@@ -60,7 +60,7 @@ export const ChatInput = memo(function ChatInput({
   }, [canSend, onSend]);
 
   return (
-    <div className="px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 sm:px-5 sm:pb-4">
+    <div className="px-3 pb-[calc(env(safe-area-inset-bottom)+0.45rem)] pt-1.5 sm:px-5 sm:pb-4 sm:pt-2">
       {showDisabledNotice ? (
         <div
           className="mx-auto mb-2 max-w-5xl rounded-lg border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3 text-xs text-[var(--warning-text)] shadow-sm"
@@ -94,7 +94,7 @@ export const ChatInput = memo(function ChatInput({
                 submit();
               }
             }}
-            className="block max-h-[140px] min-h-14 w-full resize-none overflow-y-auto bg-transparent py-[14px] pl-4 pr-14 text-[16px] leading-[1.4] text-[var(--text)] outline-none placeholder:text-[14px] placeholder:text-[var(--muted)] sm:min-h-10 sm:px-1 sm:py-2 sm:pr-12 sm:text-[14px] sm:leading-6"
+            className="block max-h-[140px] min-h-14 w-full resize-none overflow-y-auto bg-transparent py-[14px] pl-3 pr-14 text-[16px] leading-[1.4] text-[var(--text)] outline-none placeholder:text-[13px] placeholder:text-[var(--muted)] sm:min-h-10 sm:px-1 sm:py-2 sm:pr-12 sm:text-[14px] sm:leading-6"
           />
           {generating ? (
             <button
@@ -117,7 +117,7 @@ export const ChatInput = memo(function ChatInput({
           )}
         </div>
       </form>
-      <p className="mx-auto mt-1 max-w-5xl text-center text-[12px] leading-4 text-[var(--muted)] sm:mt-2 sm:text-[10px]">
+      <p className="mx-auto mt-1 max-w-5xl text-center text-[10px] leading-3 text-[var(--muted)] opacity-55 sm:mt-2 sm:leading-4">
         Created by Ari
       </p>
     </div>

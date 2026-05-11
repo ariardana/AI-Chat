@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Check, ChevronDown, FlaskConical, Search, X } from "lucide-react";
 import { memo, useEffect, useMemo, useState } from "react";
-import { getModelCapabilities, getModelCategory, getModelContextLength, getModelProvider } from "@/lib/model-info";
+import { getModelCapabilities, getModelCategory, getModelContextLength, getModelDisplayName, getModelProvider } from "@/lib/model-info";
 import type { ModelAvailability, ModelCapabilities } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -239,8 +239,8 @@ export const ModelPicker = memo(function ModelPicker({
       >
         <span className="min-w-0">
           <span className="block text-[10px] font-medium uppercase text-[var(--muted)]">{t.model}</span>
-          <span className="mt-1 block truncate font-mono text-[11px] text-[var(--muted-strong)]">
-            {activeModel || t.noModel}
+          <span className="mt-1 block max-w-full truncate text-[11px] font-medium text-[var(--muted-strong)]">
+            {activeModel ? getModelDisplayName(activeModel) : t.noModel}
           </span>
           <span className={cn("mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold", STATUS_STYLES[activeAvailability])}>
             {statusLabel}

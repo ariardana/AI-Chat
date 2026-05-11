@@ -457,7 +457,7 @@ export const ChatMessage = memo(function ChatMessage({
   return (
     <article
       className={cn(
-        "group animate-soft-enter flex w-full gap-3",
+        "group animate-soft-enter flex w-full gap-2 sm:gap-3",
         isUser ? "justify-end" : "justify-start",
       )}
     >
@@ -473,8 +473,8 @@ export const ChatMessage = memo(function ChatMessage({
         <Bot size={15} />
       </div>
 
-      <div className={cn("min-w-0", isUser ? "max-w-[88%] sm:max-w-[68%]" : "max-w-full flex-1")}>
-        <div className={cn("mb-1 flex items-center gap-2 text-[10px] text-[var(--muted)]", isUser && "justify-end")}>
+      <div className={cn("min-w-0", isUser ? "max-w-[86%] sm:max-w-[68%]" : "max-w-full flex-1")}>
+        <div className={cn("mb-0.5 flex items-center gap-1.5 text-[9px] text-[var(--muted)] sm:mb-1 sm:gap-2 sm:text-[10px]", isUser && "justify-end")}>
           {!isUser ? <div className="font-medium">{t.assistant}</div> : null}
           <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover:opacity-100">
             {isUser ? (
@@ -557,7 +557,7 @@ export const ChatMessage = memo(function ChatMessage({
         ) : (
           <div
             className={cn(
-              "rounded-xl border px-4 py-3 text-sm shadow-sm sm:px-4 sm:py-3.5",
+              "rounded-2xl border px-3 py-2.5 text-[13px] leading-5 shadow-sm sm:rounded-xl sm:px-4 sm:py-3.5 sm:text-sm sm:leading-6",
               isUser
                 ? "border-transparent bg-[linear-gradient(135deg,var(--primary),var(--primary-strong))] text-[var(--primary-contrast)]"
                 : "border-[var(--border)] bg-[var(--surface)] text-[var(--text)]",
@@ -574,7 +574,7 @@ export const ChatMessage = memo(function ChatMessage({
                   />
                 ) : null}
                 {visibleContent.trim() ? (
-                  <div className="markdown text-[14px]">
+                  <div className="markdown text-[13px] leading-5 sm:text-[14px] sm:leading-[1.68]">
                     <MarkdownRenderer content={visibleContent} components={markdownComponents} />
                   </div>
                 ) : null}
@@ -616,7 +616,7 @@ export const ChatMessage = memo(function ChatMessage({
             ) : message.content && !message.error && message.requestStatus === "stopped" ? (
               <div className="mt-2 text-xs leading-5 text-[var(--muted)]">{statusText}</div>
             ) : null}
-            <div className={cn("mt-1 flex items-center gap-1 text-[10px]", isUser ? "justify-end text-[var(--primary-contrast)] opacity-75" : "text-[var(--muted)]")}>
+            <div className={cn("mt-1 flex items-center gap-1 text-[9px] sm:text-[10px]", isUser ? "justify-end text-[var(--primary-contrast)] opacity-65" : "text-[var(--muted)] opacity-80")}>
               <span>{time}</span>
               {isUser ? <CheckCheck size={12} /> : null}
             </div>

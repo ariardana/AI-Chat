@@ -27,6 +27,24 @@ export function getModelProvider(model: string) {
   return provider || "custom";
 }
 
+export function getModelDisplayName(model: string) {
+  const id = model.split("/").pop() || model;
+  return id
+    .replace(/(?:^|[-_])(a\d+b|instruct|chat|preview|latest|free)(?=$|[-_])/gi, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\bqwen3\b/gi, "Qwen3")
+    .replace(/\bkimi\b/gi, "Kimi")
+    .replace(/\bminimax\b/gi, "MiniMax")
+    .replace(/\bnemotron\b/gi, "Nemotron")
+    .replace(/\bgpt\b/gi, "GPT")
+    .replace(/\boss\b/gi, "OSS")
+    .replace(/\bvl\b/gi, "VL")
+    .replace(/\b([0-9]+)b\b/gi, "$1B")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()) || model;
+}
+
 export function getModelCategory(model: string): ModelCategory {
   const value = model.toLowerCase();
   if (value.includes("embed")) return "embedding";

@@ -226,9 +226,9 @@ export function MobileMenuButton({
       type="button"
       title={language === "id" ? "Buka menu" : "Open menu"}
       onClick={onClick}
-      className="soft-focus-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--muted)] leading-none transition hover:bg-[var(--surface-hover)] hover:text-[var(--text)] active:scale-95 md:hidden"
+      className="soft-focus-ring flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--muted)] leading-none transition hover:bg-[var(--surface-hover)] hover:text-[var(--text)] active:scale-95 md:hidden"
     >
-      <Menu size={20} />
+      <Menu size={18} />
     </button>
   );
 }

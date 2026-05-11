@@ -9,6 +9,7 @@ import { ChatSidebar, MobileMenuButton } from "@/components/ChatSidebar";
 import { SplashScreen } from "@/components/SplashScreen";
 import { SettingsModal } from "@/components/SettingsModal";
 import { CHAT_FALLBACK_MODELS, DEFAULT_MODEL, DEFAULT_STORAGE, FALLBACK_MODEL } from "@/lib/defaults";
+import { getModelDisplayName } from "@/lib/model-info";
 import { parseThinkTags } from "@/lib/reasoning";
 import { createExportBundle, loadStorage, parseImportBundle, saveStorage } from "@/lib/storage";
 import { readOpenAIStream } from "@/lib/stream";
@@ -1306,22 +1307,22 @@ export function ChatApp() {
       />
 
       <section className="relative flex h-full min-w-0 flex-1 flex-col bg-[var(--background)]">
-        <header className="z-20 flex h-14 shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-2 sm:px-4">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <header className="z-20 flex h-12 shrink-0 items-center gap-1.5 border-b border-[var(--border)] bg-[var(--surface)] px-2 sm:h-14 sm:gap-2 sm:px-4">
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
             <MobileMenuButton
               onClick={() => setMobileOpen(true)}
               language={settings.language}
             />
             <div className="min-w-0 leading-tight">
-              <div className="truncate text-sm font-semibold">
+              <div className="truncate text-[13px] font-semibold sm:text-sm">
                 {activeChat?.title ?? (isIndonesian ? "Obrolan baru" : "New chat")}
               </div>
-              <div className="truncate font-mono text-[10px] leading-4 text-[var(--muted)]">
-                {settings.activeModel || (isIndonesian ? "Tidak ada model" : "No model")}
+              <div className="max-w-[52vw] truncate text-[10px] leading-4 text-[var(--muted)] sm:max-w-none">
+                {settings.activeModel ? getModelDisplayName(settings.activeModel) : (isIndonesian ? "Tidak ada model" : "No model")}
               </div>
             </div>
           </div>
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             <button
               type="button"
               title={t.toggleTheme}
@@ -1329,20 +1330,20 @@ export function ChatApp() {
                 updateSettings({ ...settings, theme: settings.theme === "dark" ? "light" : "dark" })
               }
               className={cn(
-                "soft-focus-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-transparent text-[var(--muted)] leading-none transition hover:border-[var(--border)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)] active:scale-95",
+                "soft-focus-ring flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-transparent text-[var(--muted)] leading-none transition hover:border-[var(--border)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)] active:scale-95 sm:h-11 sm:w-11",
               )}
             >
-              {settings.theme === "dark" ? <Moon size={20} /> : <Sun size={20} />}
+              {settings.theme === "dark" ? <Moon size={18} className="sm:h-5 sm:w-5" /> : <Sun size={18} className="sm:h-5 sm:w-5" />}
             </button>
             <button
               type="button"
               title={t.openSettings}
               onClick={() => setSettingsOpen(true)}
               className={cn(
-                "soft-focus-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-transparent text-[var(--muted)] leading-none transition hover:border-[var(--border)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)] active:scale-95",
+                "soft-focus-ring flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-transparent text-[var(--muted)] leading-none transition hover:border-[var(--border)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)] active:scale-95 sm:h-11 sm:w-11",
               )}
             >
-              <SlidersHorizontal size={20} />
+              <SlidersHorizontal size={18} className="sm:h-5 sm:w-5" />
             </button>
           </div>
         </header>
@@ -1368,11 +1369,11 @@ export function ChatApp() {
         <div
           ref={scrollContainerRef}
           onScroll={handleMessagesScroll}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 sm:px-5"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth px-2.5 [-webkit-overflow-scrolling:touch] sm:px-5"
         >
           <div className="mx-auto flex min-h-full max-w-5xl flex-col">
             {activeMessages.length ? (
-              <div className="space-y-5 py-5 sm:py-7">
+              <div className="space-y-3 py-3 sm:space-y-5 sm:py-7">
                 {virtualTopPadding ? <div aria-hidden style={{ height: virtualTopPadding }} /> : null}
                 {visibleMessages.map((message) => (
                   <ChatMessage
@@ -1390,26 +1391,26 @@ export function ChatApp() {
                 {virtualBottomPadding ? <div aria-hidden style={{ height: virtualBottomPadding }} /> : null}
               </div>
             ) : (
-              <div className="flex flex-1 flex-col items-center justify-center px-4 py-14 text-center sm:px-6">
-                <div className="animate-soft-enter w-full max-w-xl rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-soft)] sm:p-8">
-                  <div className="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-lg bg-[var(--primary)] text-[var(--primary-contrast)]">
-                    <Sparkles size={24} />
+              <div className="flex flex-1 flex-col items-center justify-center px-3 py-8 text-center sm:px-6 sm:py-14">
+                <div className="animate-soft-enter w-full max-w-[420px] rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-soft)] sm:max-w-xl sm:p-8">
+                  <div className="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-[var(--primary)] text-[var(--primary-contrast)] sm:mb-5 sm:h-12 sm:w-12 sm:rounded-lg">
+                    <Sparkles size={20} className="sm:h-6 sm:w-6" />
                   </div>
-                  <h1 className="text-balance text-2xl font-semibold tracking-tight">Mini Open WebUI</h1>
-                  <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">
+                  <h1 className="text-balance text-xl font-semibold tracking-tight sm:text-2xl">Mini Open WebUI</h1>
+                  <p className="mx-auto mt-2 line-clamp-2 max-w-[320px] text-xs leading-5 text-[var(--muted)] sm:mt-3 sm:max-w-md sm:text-sm sm:leading-6">
                     {t.intro}
                   </p>
-                  <div className="mt-6 grid gap-3 text-left sm:grid-cols-2">
-                    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
-                      <div className="text-[10px] font-medium uppercase text-[var(--muted)]">Provider</div>
-                      <div className="mt-2 truncate text-sm font-medium text-[var(--foreground)]">
+                  <div className="mt-4 grid gap-2 text-left sm:mt-6 sm:grid-cols-2 sm:gap-3">
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-3 sm:rounded-lg sm:p-4">
+                      <div className="text-[9px] font-medium uppercase text-[var(--muted)] sm:text-[10px]">Provider</div>
+                      <div className="mt-1 truncate text-xs font-medium text-[var(--foreground)] sm:mt-2 sm:text-sm">
                         {settings.providerName || "-"}
                       </div>
                     </div>
-                    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
-                      <div className="text-[10px] font-medium uppercase text-[var(--muted)]">Model</div>
-                      <div className="mt-2 truncate font-mono text-xs text-[var(--muted-strong)]">
-                        {settings.activeModel || "-"}
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-3 sm:rounded-lg sm:p-4">
+                      <div className="text-[9px] font-medium uppercase text-[var(--muted)] sm:text-[10px]">Model</div>
+                      <div className="mt-1 truncate text-xs font-medium text-[var(--muted-strong)] sm:mt-2">
+                        {settings.activeModel ? getModelDisplayName(settings.activeModel) : "-"}
                       </div>
                     </div>
                   </div>
@@ -1417,16 +1418,16 @@ export function ChatApp() {
                     <button
                       type="button"
                       onClick={() => setSettingsOpen(true)}
-                      className="soft-focus-ring mt-6 inline-flex h-10 items-center gap-2 rounded-lg bg-[var(--primary)] px-5 text-sm font-semibold text-[var(--primary-contrast)] transition hover:bg-[var(--primary-strong)] active:translate-y-0"
+                      className="soft-focus-ring mt-4 inline-flex h-9 items-center gap-2 rounded-2xl bg-[var(--primary)] px-4 text-xs font-semibold text-[var(--primary-contrast)] transition hover:bg-[var(--primary-strong)] active:translate-y-0 sm:mt-6 sm:h-10 sm:rounded-lg sm:px-5 sm:text-sm"
                     >
-                      <Settings size={16} />
+                      <Settings size={15} />
                       {t.addApiKey}
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={() => setSettingsOpen(true)}
-                      className="soft-focus-ring mt-6 inline-flex h-10 items-center rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] px-5 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--surface-hover)] active:translate-y-0"
+                      className="soft-focus-ring mt-4 inline-flex h-9 items-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 text-xs font-semibold text-[var(--text)] transition hover:bg-[var(--surface-hover)] active:translate-y-0 sm:mt-6 sm:h-10 sm:rounded-lg sm:px-5 sm:text-sm"
                     >
                       {t.openSettingsButton}
                     </button>
