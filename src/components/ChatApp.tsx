@@ -19,7 +19,7 @@ const VIRTUALIZE_AFTER = 90;
 const ESTIMATED_MESSAGE_HEIGHT = 132;
 const VIRTUAL_OVERSCAN = 10;
 const CHAT_REQUEST_TIMEOUT_MS = 45_000;
-const MODEL_FETCH_TIMEOUT_MS = 20_000;
+const MODEL_FETCH_TIMEOUT_MS = 15_000;
 const SLOW_RESPONSE_MS = 8_000;
 const NO_TOKEN_RESPONSE_MS = 10_000;
 const WARNING_RESPONSE_MS = 15_000;
@@ -1109,20 +1109,21 @@ export function ChatApp() {
   const fetchModels = useCallback(async (options?: { silent?: boolean; refresh?: boolean }): Promise<{ ok: boolean; error?: string }> => {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => {
-      controller.abort(new DOMException("Model fetch exceeded 20 seconds.", "TimeoutError"));
+      controller.abort(new DOMException("Model fetch exceeded 15 seconds.", "TimeoutError"));
     }, MODEL_FETCH_TIMEOUT_MS);
 
     setModelsLoading(true);
     if (!options?.silent) setImportError(null);
 
     try {
-      const response = await fetch(options?.refresh ? "/api/models/refresh" : "/api/models", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+      const response = await fetch(options?.refresh ? "/api/models/refresh" : "/api/models?provider=nvidia", {
+        method: options?.refresh ? "POST" : "GET",
+        headers: options?.refresh ? { "Content-Type": "application/json" } : undefined,
+        body: options?.refresh ? JSON.stringify({}) : undefined,
         signal: controller.signal,
       });
       const payload = (await response.json()) as {
+        warning?: string;
         models?: string[];
         error?: string;
         providerError?: string;
@@ -1167,7 +1168,7 @@ export function ChatApp() {
           ...(payload.modelCapabilities ?? {}),
         },
       }));
-      setModelLoadWarning(null);
+      setModelLoadWarning(payload.warning ?? null);
       return { ok: true };
     } catch (error) {
       const timeoutReason = controller.signal.aborted ? getSignalReason(controller.signal) : undefined;

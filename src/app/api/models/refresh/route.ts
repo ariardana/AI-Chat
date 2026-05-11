@@ -9,11 +9,13 @@ import {
   resolveApiKey,
   withTimeout,
 } from "@/lib/server/nvidia";
-import { modelCachePayload, upsertCachedModels } from "@/lib/server/model-cache";
+import { modelCachePayload, readModelCache, upsertCachedModels } from "@/lib/server/model-cache";
 import { rateLimit } from "@/lib/server/rate-limit";
 import { guardApiRequest, safeProviderErrorLabel, sanitizeErrorMessage } from "@/lib/server/security";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 20;
 
 async function providerError(upstream: Response) {
   const { status, cleanDetail } = await readProviderError(upstream);
@@ -42,10 +44,16 @@ export async function POST(request: Request) {
   }
 
   const credentials = resolveApiKey(request, body.apiKey);
+  const fallbackCache = await readModelCache();
   if (!credentials.apiKey) {
-    return jsonError("NVIDIA_API_KEY is not configured. Add a server env key or set a custom key in Settings.", 401, {
+    return Response.json({
+      ...modelCachePayload(fallbackCache),
+      providerName: "NVIDIA",
+      baseUrl: NVIDIA_BASE_URL,
+      credentialSource: "cache",
       hasServerKey: credentials.hasServerKey,
-    });
+      error: "NVIDIA_API_KEY is not configured. Returning cached models.",
+    }, { status: Object.keys(fallbackCache.models).length ? 200 : 401 });
   }
 
   const timeout = withTimeout(request.signal, MODEL_FETCH_TIMEOUT_MS);
@@ -65,10 +73,16 @@ export async function POST(request: Request) {
         statusCode: upstream.status,
         providerError: errorDetail.providerError,
       });
-      return jsonError(errorDetail.userMessage, upstream.status, {
+      return Response.json({
+        ...modelCachePayload(fallbackCache),
+        providerName: "NVIDIA",
+        baseUrl: NVIDIA_BASE_URL,
+        credentialSource: "cache",
         hasServerKey: credentials.hasServerKey,
+        warning: "Gagal mengambil model terbaru, memakai cache.",
+        error: errorDetail.userMessage,
         providerError: safeProviderErrorLabel(upstream.status),
-      });
+      }, { status: Object.keys(fallbackCache.models).length ? 200 : upstream.status });
     }
 
     const payload = (await upstream.json()) as {
@@ -99,17 +113,29 @@ export async function POST(request: Request) {
         timeoutReason: getAbortReason(error, timeout.signal),
         abortReason: request.signal.aborted ? getAbortReason(error, request.signal) : undefined,
       });
-      return jsonError("NVIDIA model refresh timed out or was aborted.", 504, {
+      return Response.json({
+        ...modelCachePayload(fallbackCache),
+        providerName: "NVIDIA",
+        baseUrl: NVIDIA_BASE_URL,
+        credentialSource: "cache",
         hasServerKey: credentials.hasServerKey,
+        warning: "Gagal mengambil model terbaru, memakai cache.",
+        error: "NVIDIA model refresh timed out or was aborted.",
         timeoutReason: getAbortReason(error, timeout.signal),
         abortReason: request.signal.aborted ? getAbortReason(error, request.signal) : "",
-      });
+      }, { status: Object.keys(fallbackCache.models).length ? 200 : 504 });
     }
 
-    return jsonError("Provider request failed.", 502, {
+    return Response.json({
+      ...modelCachePayload(fallbackCache),
+      providerName: "NVIDIA",
+      baseUrl: NVIDIA_BASE_URL,
+      credentialSource: "cache",
       hasServerKey: credentials.hasServerKey,
+      warning: "Gagal mengambil model terbaru, memakai cache.",
+      error: "Provider request failed.",
       providerError: sanitizeErrorMessage(error, "provider_error"),
-    });
+    }, { status: Object.keys(fallbackCache.models).length ? 200 : 502 });
   } finally {
     timeout.cleanup();
   }

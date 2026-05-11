@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { DEFAULT_MODELS } from "@/lib/defaults";
-import { getModelCapabilities } from "@/lib/model-info";
+import { getModelCapabilities, getModelCategory, getModelProvider } from "@/lib/model-info";
 import type { ModelAvailability, ModelAvailabilityStatus, ModelCapabilities } from "@/lib/types";
 
 export type ModelCacheSource = "manual" | "detected" | "api";
@@ -25,8 +25,11 @@ interface ModelCacheFile {
   models: Record<string, CachedModelRecord>;
 }
 
-export const MODEL_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+export const MODEL_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MODEL_CACHE_PATH = join(process.cwd(), "data", "model-cache.json");
+const MODEL_CACHE_KEY = "webui:nvidia:model-cache:v1";
+const REDIS_CACHE_TIMEOUT_MS = 4_000;
+let memoryCache: ModelCacheFile | null = null;
 
 function now() {
   return Date.now();
@@ -88,7 +91,83 @@ function normalizeCache(value: unknown): ModelCacheFile {
   return normalized;
 }
 
+function hasUpstashRedis() {
+  return Boolean(redisEnv().url && redisEnv().token);
+}
+
+function canUseLocalFileCache() {
+  return process.env.NODE_ENV !== "production" && process.env.VERCEL !== "1";
+}
+
+function readMemoryCache() {
+  memoryCache ??= emptyCache();
+  return normalizeCache(memoryCache);
+}
+
+function writeMemoryCache(cache: ModelCacheFile) {
+  memoryCache = normalizeCache(cache);
+}
+
+function redisEnv() {
+  return {
+    url: process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN,
+  };
+}
+
+async function redisCommand(command: unknown[]) {
+  const { url, token } = redisEnv();
+  if (!url || !token) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(new DOMException("Redis cache request timed out.", "TimeoutError")), REDIS_CACHE_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(command),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Redis cache command failed with ${response.status}.`);
+    }
+
+    return (await response.json()) as { result?: unknown; error?: string };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function readRedisCache() {
+  const payload = await redisCommand(["GET", MODEL_CACHE_KEY]);
+  const raw = payload?.result;
+  if (typeof raw !== "string") return emptyCache();
+  return normalizeCache(JSON.parse(raw) as unknown);
+}
+
+async function writeRedisCache(cache: ModelCacheFile) {
+  await redisCommand(["SET", MODEL_CACHE_KEY, JSON.stringify(cache)]);
+}
+
 export async function readModelCache() {
+  if (hasUpstashRedis()) {
+    try {
+      return await readRedisCache();
+    } catch (error) {
+      console.warn("AI model cache read failed", {
+        providerError: error instanceof Error ? error.message : "Redis cache read failed.",
+      });
+      return emptyCache();
+    }
+  }
+
+  if (!canUseLocalFileCache()) return readMemoryCache();
+
   try {
     return normalizeCache(JSON.parse(await readFile(MODEL_CACHE_PATH, "utf8")) as unknown);
   } catch {
@@ -97,6 +176,23 @@ export async function readModelCache() {
 }
 
 export async function writeModelCache(cache: ModelCacheFile) {
+  if (hasUpstashRedis()) {
+    try {
+      await writeRedisCache(cache);
+    } catch (error) {
+      console.warn("AI model cache write failed", {
+        providerError: error instanceof Error ? error.message : "Redis cache write failed.",
+      });
+    }
+    return;
+  }
+
+  if (!canUseLocalFileCache()) {
+    writeMemoryCache(cache);
+    console.warn("AI model cache is memory-only because no Redis/KV env is configured for this production runtime.");
+    return;
+  }
+
   await mkdir(dirname(MODEL_CACHE_PATH), { recursive: true });
   const temporaryPath = `${MODEL_CACHE_PATH}.tmp`;
   await writeFile(temporaryPath, `${JSON.stringify(cache, null, 2)}\n`, "utf8");
@@ -109,6 +205,17 @@ export function isModelCacheFresh(cache: ModelCacheFile) {
 
 export function modelCachePayload(cache: ModelCacheFile) {
   const models = Object.keys(cache.models).sort((a, b) => a.localeCompare(b));
+  const items = models.map((modelId) => {
+    const item = cache.models[modelId];
+    return {
+      id: modelId,
+      provider: item.provider || getModelProvider(modelId),
+      type: getModelCategory(modelId),
+      capabilities: item.capabilities,
+      status: item.status,
+      lastCheckedAt: item.lastCheckedAt ? new Date(item.lastCheckedAt).toISOString() : null,
+    };
+  });
   const modelAvailability = models.reduce<Record<string, ModelAvailability>>((result, modelId) => {
     const item = cache.models[modelId];
     result[modelId] = {
@@ -125,6 +232,7 @@ export function modelCachePayload(cache: ModelCacheFile) {
   }, {});
 
   return {
+    items,
     models,
     modelAvailability,
     modelCapabilities,

@@ -14,6 +14,8 @@ interface ModelManagerProps {
   language: "en" | "id";
 }
 
+const MODEL_PAGE_SIZE = 30;
+
 export function ModelManager({
   models,
   activeModel,
@@ -24,6 +26,7 @@ export function ModelManager({
   language,
 }: ModelManagerProps) {
   const [newModel, setNewModel] = useState("");
+  const [visibleCount, setVisibleCount] = useState(MODEL_PAGE_SIZE);
   const t = {
     models: language === "id" ? "Model" : "Models",
     fetching: language === "id" ? "Mengambil" : "Fetching",
@@ -34,7 +37,10 @@ export function ModelManager({
     select: language === "id" ? "Pilih model" : "Select model",
     remove: language === "id" ? "Hapus model" : "Remove model",
     active: language === "id" ? "Aktif" : "Active",
+    loadMore: language === "id" ? "Muat lagi" : "Load more",
   };
+  const visibleModels = models.slice(0, visibleCount);
+  const hasMoreModels = visibleModels.length < models.length;
 
   function addModel() {
     const model = newModel.trim();
@@ -106,7 +112,7 @@ export function ModelManager({
         {models.length === 0 ? (
           <div className="px-3 py-3 text-sm text-[var(--muted)] sm:col-span-2">{t.empty}</div>
         ) : null}
-        {models.map((model, index) => (
+        {visibleModels.map((model, index) => (
           <div
             key={`${model}-${index}`}
             className={cn(
@@ -148,6 +154,15 @@ export function ModelManager({
             />
           </div>
         ))}
+        {hasMoreModels ? (
+          <button
+            type="button"
+            onClick={() => setVisibleCount((current) => Math.min(current + MODEL_PAGE_SIZE, models.length))}
+            className="soft-focus-ring rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-xs font-semibold text-[var(--muted-strong)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text)] sm:col-span-2"
+          >
+            {t.loadMore} ({visibleModels.length}/{models.length})
+          </button>
+        ) : null}
       </div>
     </div>
   );

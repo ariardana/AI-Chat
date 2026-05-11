@@ -7,6 +7,7 @@ import type { ModelAvailability, ModelCapabilities } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type ModelFilter = "all" | "thinking" | "coding" | "fast" | "vision";
+const MODEL_PAGE_SIZE = 30;
 
 interface ModelPickerProps {
   models: string[];
@@ -60,6 +61,7 @@ export const ModelPicker = memo(function ModelPicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ModelFilter>("all");
+  const [visibleCount, setVisibleCount] = useState(MODEL_PAGE_SIZE);
   const [pendingUnavailable, setPendingUnavailable] = useState<string | null>(null);
   const isIndonesian = language === "id";
   const t = {
@@ -92,6 +94,7 @@ export const ModelPicker = memo(function ModelPicker({
     keep: isIndonesian ? "Tetap pilih" : "Select anyway",
     chooseOther: isIndonesian ? "Pilih lain" : "Choose other",
     empty: isIndonesian ? "Tidak ada model yang cocok." : "No matching models.",
+    loadMore: isIndonesian ? "Muat lagi" : "Load more",
   };
 
   const filteredModels = useMemo(() => {
@@ -109,7 +112,8 @@ export const ModelPicker = memo(function ModelPicker({
     });
   }, [capabilities, filter, models, query]);
 
-  const visibleModels = filteredModels.slice(0, 12);
+  const visibleModels = filteredModels.slice(0, visibleCount);
+  const hasMoreModels = visibleModels.length < filteredModels.length;
   const activeAvailability = availability[activeModel]?.status ?? "unknown";
   const statusLabel = activeAvailability === "available"
     ? t.available
@@ -122,6 +126,10 @@ export const ModelPicker = memo(function ModelPicker({
   useEffect(() => {
     onOpenChange?.(open);
   }, [onOpenChange, open]);
+
+  useEffect(() => {
+    setVisibleCount(MODEL_PAGE_SIZE);
+  }, [filter, open, query]);
 
   useEffect(() => {
     if (!open) return;
@@ -146,6 +154,17 @@ export const ModelPicker = memo(function ModelPicker({
     onSelectModel(pendingUnavailable);
     setPendingUnavailable(null);
     setOpen(false);
+  }
+
+  function showMoreModels() {
+    setVisibleCount((current) => Math.min(current + MODEL_PAGE_SIZE, filteredModels.length));
+  }
+
+  function handleModelListScroll(event: React.UIEvent<HTMLDivElement>) {
+    if (!hasMoreModels) return;
+    const target = event.currentTarget;
+    const distanceFromBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+    if (distanceFromBottom < 320) showMoreModels();
   }
 
   const filters: Array<{ id: ModelFilter; label: string }> = [
@@ -282,10 +301,13 @@ export const ModelPicker = memo(function ModelPicker({
               </div>
             </header>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:p-4">
+            <div
+              onScroll={handleModelListScroll}
+              className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:p-4"
+            >
               {filteredModels.length ? (
                 <div className="grid max-w-full gap-2 overflow-x-hidden">
-                  {filteredModels.map((model) => {
+                  {visibleModels.map((model) => {
                     const selected = model === activeModel;
                     const category = getModelCategory(model);
                     const provider = getModelProvider(model);
@@ -363,6 +385,15 @@ export const ModelPicker = memo(function ModelPicker({
                       </div>
                     );
                   })}
+                  {hasMoreModels ? (
+                    <button
+                      type="button"
+                      onClick={showMoreModels}
+                      className="soft-focus-ring mt-1 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-xs font-semibold text-[var(--muted-strong)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                    >
+                      {t.loadMore} ({visibleModels.length}/{filteredModels.length})
+                    </button>
+                  ) : null}
                 </div>
               ) : (
                 <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-8 text-center text-sm text-[var(--muted)]">

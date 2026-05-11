@@ -12,6 +12,8 @@ import { rateLimit } from "@/lib/server/rate-limit";
 import { guardApiRequest, safeProviderErrorLabel, sanitizeErrorMessage } from "@/lib/server/security";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 12;
 
 const MODEL_CHECK_TIMEOUT_MS = 10_000;
 

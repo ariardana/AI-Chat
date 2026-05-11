@@ -3,7 +3,6 @@ import {
   MODEL_FETCH_TIMEOUT_MS,
   NVIDIA_BASE_URL,
   getAbortReason,
-  getServerApiKey,
   isAbortLike,
   jsonError,
   readProviderError,
@@ -20,6 +19,8 @@ import { rateLimit } from "@/lib/server/rate-limit";
 import { guardApiRequest, safeProviderErrorLabel, sanitizeErrorMessage } from "@/lib/server/security";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 20;
 
 async function providerError(upstream: Response) {
   const { status, cleanDetail } = await readProviderError(upstream);
@@ -51,9 +52,9 @@ async function fetchProviderModels(request: Request, apiKey: string) {
       });
       return {
         ok: false as const,
-        response: jsonError(errorDetail.userMessage, upstream.status, {
-          providerError: safeProviderErrorLabel(upstream.status),
-        }),
+        status: upstream.status,
+        error: errorDetail.userMessage,
+        providerError: safeProviderErrorLabel(upstream.status),
       };
     }
 
@@ -85,10 +86,11 @@ async function fetchProviderModels(request: Request, apiKey: string) {
       });
       return {
         ok: false as const,
-        response: jsonError("NVIDIA model request timed out or was aborted.", 504, {
-          timeoutReason: getAbortReason(error, timeout.signal),
-          abortReason: request.signal.aborted ? getAbortReason(error, request.signal) : "",
-        }),
+        status: 504,
+        error: "NVIDIA model request timed out or was aborted.",
+        providerError: getAbortReason(error, timeout.signal),
+        timeoutReason: getAbortReason(error, timeout.signal),
+        abortReason: request.signal.aborted ? getAbortReason(error, request.signal) : "",
       };
     }
 
@@ -98,24 +100,97 @@ async function fetchProviderModels(request: Request, apiKey: string) {
     });
     return {
       ok: false as const,
-      response: jsonError("Provider request failed.", 502, {
-        providerError: sanitizeErrorMessage(error, "provider_error"),
-      }),
+      status: 502,
+      error: "Provider request failed.",
+      providerError: sanitizeErrorMessage(error, "provider_error"),
     };
   } finally {
     timeout.cleanup();
   }
 }
 
-export async function GET() {
-  const cache = await readModelCache();
+function responseFromCache(
+  cache: Awaited<ReturnType<typeof readModelCache>>,
+  details: {
+    credentialSource: string;
+    hasServerKey: boolean;
+    warning?: string;
+    error?: string;
+    providerError?: string;
+    status?: number;
+    timeoutReason?: string;
+    abortReason?: string;
+  },
+) {
   return Response.json({
     ...modelCachePayload(cache),
     providerName: "NVIDIA",
     baseUrl: NVIDIA_BASE_URL,
-    credentialSource: "cache",
-    hasServerKey: Boolean(getServerApiKey()),
+    credentialSource: details.credentialSource,
+    hasServerKey: details.hasServerKey,
+    warning: details.warning,
+    error: details.error,
+    providerError: details.providerError,
+    timeoutReason: details.timeoutReason,
+    abortReason: details.abortReason,
+  }, { status: details.status ?? 200 });
+}
+
+async function serveModels(request: Request, body: Partial<ModelsRequestBody> = {}, forceRefresh = false) {
+  const cache = await readModelCache();
+  const credentials = resolveApiKey(request, body.apiKey);
+
+  if (!forceRefresh && isModelCacheFresh(cache)) {
+    return responseFromCache(cache, {
+      credentialSource: "cache",
+      hasServerKey: credentials.hasServerKey,
+    });
+  }
+
+  if (!credentials.apiKey) {
+    return responseFromCache(cache, {
+      credentialSource: "cache",
+      hasServerKey: credentials.hasServerKey,
+      error: "NVIDIA_API_KEY is not configured. Returning cached models.",
+      status: Object.keys(cache.models).length ? 200 : 401,
+    });
+  }
+
+  const result = await fetchProviderModels(request, credentials.apiKey);
+  if (!result.ok) {
+    return responseFromCache(cache, {
+      credentialSource: "cache",
+      hasServerKey: credentials.hasServerKey,
+      warning: "Gagal mengambil model terbaru, memakai cache.",
+      error: result.error,
+      providerError: result.providerError,
+      timeoutReason: result.timeoutReason,
+      abortReason: result.abortReason,
+      status: Object.keys(cache.models).length ? 200 : result.status,
+    });
+  }
+
+  const nextCache = await upsertCachedModels(result.models, "api");
+  return responseFromCache(nextCache, {
+    credentialSource: credentials.source,
+    hasServerKey: credentials.hasServerKey,
   });
+}
+
+export async function GET(request: Request) {
+  const provider = new URL(request.url).searchParams.get("provider") ?? "nvidia";
+  if (provider.toLowerCase() !== "nvidia") {
+    return jsonError("Unsupported model provider.", 400, { provider });
+  }
+
+  const limited = rateLimit(request, "models", { limit: 60, windowMs: 60_000 });
+  if (limited.limited) {
+    return jsonError("Too many model requests. Try again shortly.", 429, {
+      retryAfter: limited.retryAfter,
+    });
+  }
+
+  return serveModels(request);
 }
 
 export async function POST(request: Request) {
@@ -141,39 +216,5 @@ export async function POST(request: Request) {
     return jsonError("Request body must be an object.");
   }
 
-  const cache = await readModelCache();
-  if (isModelCacheFresh(cache)) {
-    const credentials = resolveApiKey(request, body.apiKey);
-    return Response.json({
-      ...modelCachePayload(cache),
-      providerName: "NVIDIA",
-      baseUrl: NVIDIA_BASE_URL,
-      credentialSource: "cache",
-      hasServerKey: credentials.hasServerKey,
-    });
-  }
-
-  const credentials = resolveApiKey(request, body.apiKey);
-  if (!credentials.apiKey) {
-    return Response.json({
-      ...modelCachePayload(cache),
-      providerName: "NVIDIA",
-      baseUrl: NVIDIA_BASE_URL,
-      credentialSource: "cache",
-      hasServerKey: credentials.hasServerKey,
-      error: "NVIDIA_API_KEY is not configured. Returning cached models.",
-    }, { status: Object.keys(cache.models).length ? 200 : 401 });
-  }
-
-  const result = await fetchProviderModels(request, credentials.apiKey);
-  if (!result.ok) return result.response;
-
-  const nextCache = await upsertCachedModels(result.models, "api");
-  return Response.json({
-    ...modelCachePayload(nextCache),
-    providerName: "NVIDIA",
-    baseUrl: NVIDIA_BASE_URL,
-    credentialSource: credentials.source,
-    hasServerKey: credentials.hasServerKey,
-  });
+  return serveModels(request, body);
 }
