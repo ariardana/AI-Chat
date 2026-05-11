@@ -23,10 +23,23 @@ export interface ModelCapabilities {
   detectedAt?: string;
 }
 
+export type MessageAttachmentKind = "image" | "pdf" | "text" | "code" | "file";
+
+export interface MessageAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  kind: MessageAttachmentKind;
+  truncated?: boolean;
+}
+
 export interface Message {
   id: string;
   role: Exclude<ChatRole, "system">;
   content: string;
+  displayContent?: string;
+  attachments?: MessageAttachment[];
   createdAt: string;
   error?: string;
   thinkingStartedAt?: string;

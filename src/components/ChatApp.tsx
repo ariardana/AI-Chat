@@ -2,7 +2,7 @@
 
 import { Moon, Settings, SlidersHorizontal, Sparkles, Sun } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChatInput } from "@/components/ChatInput";
+import { ChatInput, type ComposerAttachment } from "@/components/ChatInput";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ScrollToBottomButton } from "@/components/ScrollToBottomButton";
 import { ChatSidebar, MobileMenuButton } from "@/components/ChatSidebar";
@@ -12,8 +12,8 @@ import { CHAT_FALLBACK_MODELS, DEFAULT_MODEL, DEFAULT_STORAGE, FALLBACK_MODEL } 
 import { parseThinkTags } from "@/lib/reasoning";
 import { createExportBundle, loadStorage, parseImportBundle, saveStorage } from "@/lib/storage";
 import { readOpenAIStream } from "@/lib/stream";
-import type { Chat, ChatApiMessage, Message, ModelAvailability, ModelCapabilities, ProviderSettings, StorageState } from "@/lib/types";
-import { cn, extractHtmlTitle, makeChatTitle, makeId, nowIso, stripHtml } from "@/lib/utils";
+import type { Chat, ChatApiMessage, Message, MessageAttachment, ModelAvailability, ModelCapabilities, ProviderSettings, StorageState } from "@/lib/types";
+import { cn, extractHtmlTitle, formatBytes, makeChatTitle, makeId, nowIso, stripHtml } from "@/lib/utils";
 
 const VIRTUALIZE_AFTER = 90;
 const ESTIMATED_MESSAGE_HEIGHT = 132;
@@ -67,6 +67,52 @@ function toApiMessages(messages: Message[]): ChatApiMessage[] {
       role: message.role,
       content: message.content,
     }));
+}
+
+function toMessageAttachments(attachments: ComposerAttachment[]): MessageAttachment[] {
+  return attachments.map((attachment) => ({
+    id: attachment.id,
+    name: attachment.name,
+    size: attachment.size,
+    type: attachment.type,
+    kind: attachment.kind,
+    truncated: attachment.truncated,
+  }));
+}
+
+function buildAttachmentPrompt(displayContent: string, attachments: ComposerAttachment[], language: "en" | "id") {
+  const lines = displayContent ? [displayContent] : [];
+  if (!attachments.length) return displayContent;
+
+  lines.push("");
+  lines.push(language === "id" ? "File yang dilampirkan:" : "Attached files:");
+  for (const attachment of attachments) {
+    const type = attachment.type || attachment.kind;
+    lines.push(`- ${attachment.name} (${attachment.kind}, ${type}, ${formatBytes(attachment.size)})`);
+  }
+
+  const textAttachments = attachments.filter((attachment) => attachment.textPreview?.trim());
+  if (textAttachments.length) {
+    lines.push("");
+    lines.push(language === "id" ? "Cuplikan isi file:" : "File content excerpts:");
+    for (const attachment of textAttachments) {
+      lines.push("");
+      lines.push(`--- ${attachment.name}${attachment.truncated ? " (truncated)" : ""} ---`);
+      lines.push(attachment.textPreview?.trim() ?? "");
+    }
+  }
+
+  const nonTextAttachments = attachments.filter((attachment) => !attachment.textPreview?.trim());
+  if (nonTextAttachments.length) {
+    lines.push("");
+    lines.push(
+      language === "id"
+        ? "Catatan: lampiran image/PDF dikirim sebagai metadata file di antarmuka ini."
+        : "Note: image/PDF attachments are sent as file metadata in this interface.",
+    );
+  }
+
+  return lines.join("\n");
 }
 
 function createAssistantPlaceholder(): Message {
@@ -933,30 +979,33 @@ export function ChatApp() {
         ? "Pilih model aktif sebelum mengirim pesan."
         : "Select an active model before sending messages.";
     }
-    if (!input.trim()) {
-      return settings.language === "id" ? "Ketik pesan untuk mulai." : "Type a message to start.";
-    }
     return null;
-  }, [credentialReady, input, settings.activeModel, settings.language]);
+  }, [credentialReady, settings.activeModel, settings.language]);
 
-  const sendMessage = useCallback(() => {
-    const content = input.trim();
-    if (!content || disabledReason || generating) return;
+  const sendMessage = useCallback((attachments: ComposerAttachment[] = []) => {
+    const displayContent = input.trim();
+    if ((!displayContent && !attachments.length) || disabledReason || generating) return;
 
     const timestamp = nowIso();
     const chatId = activeChat?.id ?? makeId();
     const existingMessages = activeChat?.messages ?? [];
+    const content = buildAttachmentPrompt(displayContent, attachments, settings.language);
+    const attachmentMetadata = toMessageAttachments(attachments);
     const userMessage: Message = {
       id: makeId(),
       role: "user",
       content,
+      displayContent,
+      attachments: attachmentMetadata.length ? attachmentMetadata : undefined,
       createdAt: timestamp,
     };
     const assistant = createAssistantPlaceholder();
     const messages = [...existingMessages, userMessage, assistant];
     const nextChat: Chat = {
       id: chatId,
-      title: existingMessages.length ? (activeChat?.title ?? "New chat") : makeChatTitle(content),
+      title: existingMessages.length
+        ? (activeChat?.title ?? "New chat")
+        : makeChatTitle(displayContent || attachmentMetadata.map((attachment) => attachment.name).join(", ")),
       messages,
       createdAt: activeChat?.createdAt ?? timestamp,
       updatedAt: timestamp,
@@ -965,7 +1014,7 @@ export function ChatApp() {
     setInput("");
     upsertChat(nextChat);
     void runCompletion(chatId, messages.filter((message) => message.id !== assistant.id), assistant.id);
-  }, [activeChat, disabledReason, generating, input, runCompletion, upsertChat]);
+  }, [activeChat, disabledReason, generating, input, runCompletion, settings.language, upsertChat]);
 
   const editUserMessage = useCallback((messageId: string, content: string) => {
     if (!activeChat || generating) return;
@@ -976,6 +1025,8 @@ export function ChatApp() {
     const edited: Message = {
       ...activeChat.messages[index],
       content,
+      displayContent: content,
+      attachments: undefined,
     };
     const assistant = createAssistantPlaceholder();
     const messages = [...activeChat.messages.slice(0, index), edited, assistant];

@@ -1,12 +1,12 @@
 "use client";
 
-import { AlertTriangle, Bot, Check, CheckCheck, ChevronDown, Copy, Edit3, RefreshCcw, RotateCcw, Save, Settings, Shuffle, X } from "lucide-react";
+import { AlertTriangle, Bot, Check, CheckCheck, ChevronDown, Copy, Edit3, File as FileIcon, FileCode2, FileText, Image, RefreshCcw, RotateCcw, Save, Settings, Shuffle, X } from "lucide-react";
 import { memo, useEffect, useMemo, useState, type ComponentType, type CSSProperties } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { parseThinkTags } from "@/lib/reasoning";
-import type { Message } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import type { Message, MessageAttachmentKind } from "@/lib/types";
+import { cn, formatBytes } from "@/lib/utils";
 
 interface ChatMessageProps {
   message: Message;
@@ -169,6 +169,59 @@ function thinkingDurationSeconds(message: Message) {
   return Math.max(1, Math.round((endedAt - startedAt) / 1000));
 }
 
+function attachmentIcon(kind: MessageAttachmentKind) {
+  if (kind === "image") return Image;
+  if (kind === "pdf" || kind === "text") return FileText;
+  if (kind === "code") return FileCode2;
+  return FileIcon;
+}
+
+function AttachmentList({
+  message,
+  user,
+}: {
+  message: Message;
+  user: boolean;
+}) {
+  if (!message.attachments?.length) return null;
+
+  return (
+    <div className={cn("grid gap-2", message.displayContent ? "mt-3" : "")}>
+      {message.attachments.map((attachment) => {
+        const Icon = attachmentIcon(attachment.kind);
+        return (
+          <div
+            key={attachment.id}
+            className={cn(
+              "flex min-w-0 items-center gap-2 rounded-xl border px-2.5 py-2",
+              user
+                ? "border-white/20 bg-white/12 text-[var(--primary-contrast)]"
+                : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--text)]",
+            )}
+          >
+            <div
+              className={cn(
+                "grid h-9 w-9 shrink-0 place-items-center rounded-lg",
+                user ? "bg-white/14" : "bg-[var(--primary-soft)] text-[var(--primary)]",
+              )}
+            >
+              <Icon size={17} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="line-clamp-2 break-all text-xs font-medium leading-4">
+                {attachment.name}
+              </div>
+              <div className={cn("mt-0.5 text-[10px] uppercase", user ? "opacity-75" : "text-[var(--muted)]")}>
+                {attachment.kind} · {formatBytes(attachment.size)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function ReasoningPanel({
   message,
   reasoning,
@@ -226,15 +279,15 @@ export const ChatMessage = memo(function ChatMessage({
   onOpenSettings,
 }: ChatMessageProps) {
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(message.content);
+  const [draft, setDraft] = useState(message.displayContent ?? message.content);
 
   const isUser = message.role === "user";
   const isStreamingAssistant = generating && isLastAssistant && !isUser;
   const parsedThinking = useMemo(
-    () => (isUser ? { reasoning: "", answer: message.content, hasThinking: false } : parseThinkTags(message.content)),
-    [isUser, message.content],
+    () => (isUser ? { reasoning: "", answer: message.displayContent ?? message.content, hasThinking: false } : parseThinkTags(message.content)),
+    [isUser, message.content, message.displayContent],
   );
-  const visibleContent = isUser ? message.content : parsedThinking.answer;
+  const visibleContent = isUser ? (message.displayContent ?? message.content) : parsedThinking.answer;
   const time = useMemo(
     () =>
       new Date(message.createdAt).toLocaleTimeString([], {
@@ -405,7 +458,7 @@ export const ChatMessage = memo(function ChatMessage({
                 title={t.edit}
                 disabled={generating}
                 onClick={() => {
-                  setDraft(message.content);
+                  setDraft(message.displayContent ?? message.content);
                   setEditing(true);
                 }}
                 className={cn(
@@ -451,7 +504,7 @@ export const ChatMessage = memo(function ChatMessage({
                 type="button"
                 title={t.cancel}
                 onClick={() => {
-                  setDraft(message.content);
+                  setDraft(message.displayContent ?? message.content);
                   setEditing(false);
                 }}
                 className={cn(
@@ -500,6 +553,7 @@ export const ChatMessage = memo(function ChatMessage({
                     <MarkdownRenderer content={visibleContent} components={markdownComponents} />
                   </div>
                 ) : null}
+                {isUser ? <AttachmentList message={message} user={isUser} /> : null}
               </>
             ) : message.error ? null : message.requestStatus === "stopped" ? (
               <div className="text-xs leading-5 text-[var(--muted)]">{statusText}</div>
