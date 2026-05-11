@@ -3,7 +3,9 @@
 import { AlertTriangle, Bot, Check, CheckCheck, ChevronDown, Copy, Edit3, File as FileIcon, FileCode2, FileText, Image, RefreshCcw, RotateCcw, Save, Settings, Shuffle, X } from "lucide-react";
 import { memo, useEffect, useMemo, useState, type ComponentType, type CSSProperties } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
+import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import { parseThinkTags } from "@/lib/reasoning";
 import type { Message, MessageAttachmentKind } from "@/lib/types";
 import { cn, formatBytes } from "@/lib/utils";
@@ -156,7 +158,12 @@ const MarkdownRenderer = memo(function MarkdownRenderer({
   components: Components;
 }) {
   return (
-    <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown
+      skipHtml
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+      components={components}
+    >
       {content}
     </ReactMarkdown>
   );
@@ -327,6 +334,24 @@ export const ChatMessage = memo(function ChatMessage({
           <code className={className} {...rest}>
             {children}
           </code>
+        );
+      },
+      span(props) {
+        const { className, children, ...rest } = props;
+        if (typeof className === "string" && className.includes("katex-display")) {
+          return (
+            <span className="math-wrapper">
+              <span className={className} {...rest}>
+                {children}
+              </span>
+            </span>
+          );
+        }
+
+        return (
+          <span className={className} {...rest}>
+            {children}
+          </span>
         );
       },
     }),

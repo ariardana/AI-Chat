@@ -346,6 +346,57 @@ pre code {
   margin: 1rem 0;
 }
 
+.math-wrapper {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.markdown .katex {
+  color: var(--text);
+  font-size: 1.02em;
+}
+
+.markdown .katex-display {
+  background: transparent;
+  color: var(--text);
+  margin: 0.35rem 0;
+  min-width: max-content;
+  padding: 0.05rem 0.1rem;
+  text-align: center;
+}
+
+.markdown .katex-display > .katex {
+  display: inline-block;
+  max-width: none;
+  text-align: initial;
+}
+
+.markdown .katex-html {
+  background: transparent;
+}
+
+.markdown .katex * {
+  border-color: currentColor;
+}
+
+:root[data-theme="light"] .markdown .katex {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .markdown .katex {
+    font-size: 0.98em;
+  }
+
+  .markdown .katex-display {
+    font-size: 0.96rem;
+  }
+}
+
 @keyframes pulse-dot {
   0%,
   80%,
