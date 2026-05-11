@@ -135,12 +135,18 @@ export async function POST(request: Request) {
     const reader = upstream.body.getReader();
     let streamController: ReadableStreamDefaultController<Uint8Array> | null = null;
     let streamDone = false;
-    const cleanupStream = () => {
+    let bytesStreamed = 0;
+    const cleanupStream = (finishReason: "done" | "abort" | "timeout" | "client-cancel" | "error") => {
       if (streamDone) return;
       streamDone = true;
       timeout.signal.removeEventListener("abort", abortUpstream);
       timeout.cleanup();
       concurrent.release();
+      console.info("AI chat upstream stream finished", {
+        finishReason,
+        bytesStreamed,
+        model,
+      });
     };
     const abortUpstream = () => {
       const reason = timeout.signal.reason ?? new DOMException("Request aborted.", "AbortError");
@@ -152,7 +158,7 @@ export async function POST(request: Request) {
           // The client may already have disconnected.
         }
       }
-      cleanupStream();
+      cleanupStream(reason instanceof DOMException && reason.name === "TimeoutError" ? "timeout" : "abort");
     };
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -172,7 +178,7 @@ export async function POST(request: Request) {
         try {
           const { done, value } = await reader.read();
           if (done) {
-            cleanupStream();
+            cleanupStream("done");
             controller.close();
             return;
           }
@@ -180,9 +186,10 @@ export async function POST(request: Request) {
             abortUpstream();
             return;
           }
+          bytesStreamed += value.byteLength;
           controller.enqueue(value);
         } catch (error) {
-          cleanupStream();
+          cleanupStream(timeout.signal.aborted || isAbortLike(error) ? "timeout" : "error");
           if (timeout.signal.aborted || isAbortLike(error)) {
             controller.error(timeout.signal.reason ?? error);
             return;
@@ -191,7 +198,7 @@ export async function POST(request: Request) {
         }
       },
       async cancel(reason) {
-        cleanupStream();
+        cleanupStream("client-cancel");
         await reader.cancel(reason);
       },
     });

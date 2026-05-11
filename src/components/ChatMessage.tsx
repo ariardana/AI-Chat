@@ -169,6 +169,14 @@ const MarkdownRenderer = memo(function MarkdownRenderer({
   );
 });
 
+function StreamingText({ content }: { content: string }) {
+  return (
+    <div className="whitespace-pre-wrap break-words text-[13px] leading-5 sm:text-[14px] sm:leading-6">
+      {content}
+    </div>
+  );
+}
+
 function thinkingDurationSeconds(message: Message) {
   const startedAt = message.thinkingStartedAt ? new Date(message.thinkingStartedAt).getTime() : 0;
   const endedAt = message.thinkingEndedAt ? new Date(message.thinkingEndedAt).getTime() : Date.now();
@@ -574,9 +582,13 @@ export const ChatMessage = memo(function ChatMessage({
                   />
                 ) : null}
                 {visibleContent.trim() ? (
-                  <div className="markdown text-[13px] leading-5 sm:text-[14px] sm:leading-[1.68]">
-                    <MarkdownRenderer content={visibleContent} components={markdownComponents} />
-                  </div>
+                  isStreamingAssistant ? (
+                    <StreamingText content={visibleContent} />
+                  ) : (
+                    <div className="markdown text-[13px] leading-5 sm:text-[14px] sm:leading-[1.68]">
+                      <MarkdownRenderer content={visibleContent} components={markdownComponents} />
+                    </div>
+                  )
                 ) : null}
                 {isUser ? <AttachmentList message={message} user={isUser} /> : null}
               </>

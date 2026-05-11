@@ -178,6 +178,13 @@ function isNetworkError(error: unknown) {
 
 function toAiRequestError(error: unknown) {
   if (error instanceof AiRequestError) return error;
+  if (error instanceof DOMException && error.name === "TimeoutError") {
+    return new AiRequestError("Stream idle timed out.", {
+      statusCode: 504,
+      timeoutReason: `${error.name}: ${error.message}`,
+      abortReason: `${error.name}: ${error.message}`,
+    });
+  }
   if (isNetworkError(error)) {
     return new AiRequestError("Network request failed.", {
       providerError: error instanceof Error ? error.message : "Network request failed.",
@@ -857,7 +864,7 @@ export function ChatApp() {
               });
             }
 
-            await readOpenAIStream(
+            const streamResult = await readOpenAIStream(
               response,
               (delta) => {
                 if (controller.signal.aborted || attemptController.signal.aborted) return;
@@ -868,6 +875,14 @@ export function ChatApp() {
               },
               attemptController.signal,
             );
+            console.info("AI chat stream finished", {
+              finishReason: streamResult.finishReason,
+              providerFinishReason: streamResult.providerFinishReason,
+              bytesRead: streamResult.bytesRead,
+              eventCount: streamResult.eventCount,
+              deltaCount: streamResult.deltaCount,
+              model: candidateModel,
+            });
             if (candidateModel !== settings.activeModel) setActiveModel(candidateModel);
             return;
           } catch (error) {
