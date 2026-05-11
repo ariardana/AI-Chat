@@ -41,7 +41,7 @@ export const ChatInput = memo(function ChatInput({
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = "0px";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 144)}px`;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 140)}px`;
   }, [value]);
 
   const hasDraft = Boolean(value.trim());
@@ -60,7 +60,7 @@ export const ChatInput = memo(function ChatInput({
   }, [canSend, onSend]);
 
   return (
-    <div className="px-3 pb-[calc(env(safe-area-inset-bottom)+0.65rem)] pt-2 sm:px-5 sm:pb-4">
+    <div className="px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 sm:px-5 sm:pb-4">
       {showDisabledNotice ? (
         <div
           className="mx-auto mb-2 max-w-5xl rounded-lg border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3 text-xs text-[var(--warning-text)] shadow-sm"
@@ -69,14 +69,14 @@ export const ChatInput = memo(function ChatInput({
         </div>
       ) : null}
       <form
-        className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-soft)]"
+        className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-[var(--shadow-soft)] sm:p-2"
         onSubmit={(event) => {
           event.preventDefault();
           submit();
         }}
       >
         <div
-          className="soft-focus-ring flex items-end gap-2 rounded-xl border border-transparent bg-transparent px-1 py-1"
+          className="soft-focus-ring relative min-h-14 rounded-xl border border-transparent bg-transparent"
         >
           <textarea
             ref={textareaRef}
@@ -94,30 +94,30 @@ export const ChatInput = memo(function ChatInput({
                 submit();
               }
             }}
-            className="max-h-36 min-h-10 flex-1 resize-none bg-transparent px-1 py-2 text-[14px] leading-6 text-[var(--text)] outline-none placeholder:text-[var(--muted)]"
+            className="block max-h-[140px] min-h-14 w-full resize-none overflow-y-auto bg-transparent py-[14px] pl-4 pr-14 text-[16px] leading-[1.4] text-[var(--text)] outline-none placeholder:text-[14px] placeholder:text-[var(--muted)] sm:min-h-10 sm:px-1 sm:py-2 sm:pr-12 sm:text-[14px] sm:leading-6"
           />
           {generating ? (
             <button
               type="button"
               title={stopTitle}
               onClick={onStop}
-              className="soft-focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[var(--danger)] bg-[var(--danger)] text-[var(--danger-contrast)] transition duration-150 hover:scale-[1.02] active:scale-95"
+              className="soft-focus-ring absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl border border-[var(--danger)] bg-[var(--danger)] text-[var(--danger-contrast)] transition duration-150 hover:scale-[1.02] active:scale-95 sm:h-10 sm:w-10"
             >
-              <Square size={16} fill="currentColor" />
+              <Square size={20} fill="currentColor" className="sm:h-4 sm:w-4" />
             </button>
           ) : (
             <button
               type="submit"
               title={sendTitle}
               disabled={!canSend}
-              className="soft-focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--primary)] text-[var(--primary-contrast)] transition duration-150 hover:scale-[1.02] hover:bg-[var(--primary-strong)] active:scale-95 disabled:translate-y-0 disabled:scale-100 disabled:bg-[var(--surface-elevated)] disabled:text-[var(--muted)]"
+              className="soft-focus-ring absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl bg-[var(--primary)] text-[var(--primary-contrast)] transition duration-150 hover:scale-[1.02] hover:bg-[var(--primary-strong)] active:scale-95 disabled:translate-y-0 disabled:scale-100 disabled:bg-[var(--surface-elevated)] disabled:text-[var(--muted)] sm:h-10 sm:w-10"
             >
-              {showDisabledNotice ? <Loader2 size={16} /> : <Send size={16} />}
+              {showDisabledNotice ? <Loader2 size={20} className="sm:h-4 sm:w-4" /> : <Send size={20} className="sm:h-4 sm:w-4" />}
             </button>
           )}
         </div>
       </form>
-      <p className="mx-auto mt-2 max-w-5xl text-center text-[10px] leading-4 text-[var(--muted)]">
+      <p className="mx-auto mt-1 max-w-5xl text-center text-[12px] leading-4 text-[var(--muted)] sm:mt-2 sm:text-[10px]">
         Created by Ari
       </p>
     </div>
