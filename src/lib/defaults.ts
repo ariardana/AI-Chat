@@ -2,10 +2,10 @@ import type { ProviderSettings, StorageState } from "@/lib/types";
 
 export const STORAGE_KEY = "lightweight-ai-chat-webui:v1";
 export const STORAGE_VERSION = 1;
-export const DEFAULT_MODEL = "moonshotai/kimi-k2.6";
+export const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b";
 export const CHAT_FALLBACK_MODELS = [
   "minimaxai/minimax-m2.5",
-  "nvidia/nemotron-3-super-120b-a12b",
+  "moonshotai/kimi-k2.6",
 ];
 
 export const DEFAULT_MODELS = [

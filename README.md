@@ -48,7 +48,7 @@ NVIDIA:
 ```text
 Provider name: NVIDIA
 Base URL: https://integrate.api.nvidia.com/v1
-Model: moonshotai/kimi-k2.6
+Model: nvidia/nemotron-3-super-120b-a12b
 ```
 
 ## Notes
