@@ -1,6 +1,7 @@
 "use client";
 
-import { Moon, Settings, SlidersHorizontal, Sparkles, Sun } from "lucide-react";
+import { Atom, Bot, Bug, Code2, FileText, Moon, SlidersHorizontal, Sun } from "lucide-react";
+import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChatInput, type ComposerAttachment } from "@/components/ChatInput";
 import { ChatMessage } from "@/components/ChatMessage";
@@ -28,6 +29,12 @@ const MODEL_SUGGESTIONS = [
   "qwen/qwen3-coder-480b-a35",
   "moonshotai/kimi-k2.6",
   "nvidia/nemotron-3-super-120b-a12b",
+];
+const EMPTY_STATE_SUGGESTIONS = [
+  { label: "Explain quantum computing", icon: Atom },
+  { label: "Write a Python function", icon: Code2 },
+  { label: "Help me debug this code", icon: Bug },
+  { label: "Summarize this article", icon: FileText },
 ];
 
 function withDefaultModel(models: string[]) {
@@ -1406,47 +1413,58 @@ export function ChatApp() {
                 {virtualBottomPadding ? <div aria-hidden style={{ height: virtualBottomPadding }} /> : null}
               </div>
             ) : (
-              <div className="flex flex-1 flex-col items-center justify-center px-3 py-8 text-center sm:px-6 sm:py-14">
-                <div className="animate-soft-enter w-full max-w-[420px] rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-soft)] sm:max-w-xl sm:p-8">
-                  <div className="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-[var(--primary)] text-[var(--primary-contrast)] sm:mb-5 sm:h-12 sm:w-12 sm:rounded-lg">
-                    <Sparkles size={20} className="sm:h-6 sm:w-6" />
-                  </div>
-                  <h1 className="text-balance text-xl font-semibold tracking-tight sm:text-2xl">Mini Open WebUI</h1>
-                  <p className="mx-auto mt-2 line-clamp-2 max-w-[320px] text-xs leading-5 text-[var(--muted)] sm:mt-3 sm:max-w-md sm:text-sm sm:leading-6">
-                    {t.intro}
-                  </p>
-                  <div className="mt-4 grid gap-2 text-left sm:mt-6 sm:grid-cols-2 sm:gap-3">
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-3 sm:rounded-lg sm:p-4">
-                      <div className="text-[9px] font-medium uppercase text-[var(--muted)] sm:text-[10px]">Provider</div>
-                      <div className="mt-1 truncate text-xs font-medium text-[var(--foreground)] sm:mt-2 sm:text-sm">
-                        {settings.providerName || "-"}
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-3 sm:rounded-lg sm:p-4">
-                      <div className="text-[9px] font-medium uppercase text-[var(--muted)] sm:text-[10px]">Model</div>
-                      <div className="mt-1 truncate text-xs font-medium text-[var(--muted-strong)] sm:mt-2">
-                        {settings.activeModel ? getModelDisplayName(settings.activeModel) : "-"}
-                      </div>
-                    </div>
-                  </div>
-                  {!credentialReady ? (
-                    <button
-                      type="button"
-                      onClick={() => setSettingsOpen(true)}
-                      className="soft-focus-ring mt-4 inline-flex h-9 items-center gap-2 rounded-2xl bg-[var(--primary)] px-4 text-xs font-semibold text-[var(--primary-contrast)] transition hover:bg-[var(--primary-strong)] active:translate-y-0 sm:mt-6 sm:h-10 sm:rounded-lg sm:px-5 sm:text-sm"
-                    >
-                      <Settings size={15} />
-                      {t.addApiKey}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setSettingsOpen(true)}
-                      className="soft-focus-ring mt-4 inline-flex h-9 items-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 text-xs font-semibold text-[var(--text)] transition hover:bg-[var(--surface-hover)] active:translate-y-0 sm:mt-6 sm:h-10 sm:rounded-lg sm:px-5 sm:text-sm"
-                    >
-                      {t.openSettingsButton}
-                    </button>
-                  )}
+              <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-4 py-8 text-center sm:px-6 sm:py-14">
+                <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_50%_24%,rgb(52_211_153_/_0.07),transparent_34%),radial-gradient(circle_at_18%_30%,rgb(34_211_238_/_0.045),transparent_26%)]" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
+
+                <div className="relative w-full max-w-[520px]">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.32, ease: "easeOut" }}
+                    className="mx-auto mb-5 grid h-11 w-11 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] text-cyan-200 shadow-[0_12px_32px_rgb(0_0_0_/_0.18)] sm:mb-6"
+                  >
+                    <Bot size={21} />
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.34, delay: 0.04, ease: "easeOut" }}
+                  >
+                    <h1 className="text-balance text-3xl font-semibold tracking-tight text-[var(--text)]">
+                      How can I help you today?
+                    </h1>
+                    <p className="mx-auto mt-3 max-w-[360px] text-sm leading-6 text-[var(--muted)]">
+                      Start a new conversation and explore the power of AI.
+                    </p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.34, delay: 0.1, ease: "easeOut" }}
+                    className="mt-7 grid gap-2 sm:grid-cols-2"
+                  >
+                    {EMPTY_STATE_SUGGESTIONS.map(({ label, icon: Icon }, index) => (
+                      <motion.button
+                        key={label}
+                        type="button"
+                        onClick={() => setInput(label)}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.985 }}
+                        transition={{ duration: 0.18, delay: 0.12 + index * 0.035 }}
+                        className="soft-focus-ring group flex h-11 items-center gap-2.5 rounded-2xl border border-[var(--border)] bg-[rgb(255_255_255_/_0.025)] px-3 text-left text-sm font-medium text-[var(--muted-strong)] shadow-[0_8px_28px_rgb(0_0_0_/_0.12)] transition hover:border-cyan-300/25 hover:bg-[var(--surface-hover)] hover:text-[var(--text)] sm:h-12"
+                      >
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] text-cyan-200/80 transition group-hover:border-cyan-300/25 group-hover:text-cyan-200">
+                          <Icon size={14} />
+                        </span>
+                        <span className="min-w-0 truncate">{label}</span>
+                      </motion.button>
+                    ))}
+                  </motion.div>
                 </div>
               </div>
             )}

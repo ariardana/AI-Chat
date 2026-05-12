@@ -65,9 +65,9 @@ export function ModelManager({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2.5">
+        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
           <Sparkles size={14} className="text-[var(--primary)]" />
           {t.models}
         </label>
@@ -75,14 +75,14 @@ export function ModelManager({
           type="button"
           onClick={onFetchModels}
           disabled={fetchingModels}
-          className="soft-focus-ring inline-flex h-9 items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-medium text-[var(--text)] transition hover:bg-[var(--surface-hover)] disabled:opacity-50 disabled:hover:translate-y-0"
+          className="soft-focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs font-medium text-[var(--text)] transition hover:bg-[var(--surface-hover)] disabled:opacity-50 disabled:hover:translate-y-0"
         >
           <DownloadCloud size={14} />
           {fetchingModels ? t.fetching : t.fetch}
         </button>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         <input
           value={newModel}
           onChange={(event) => setNewModel(event.target.value)}
@@ -93,13 +93,13 @@ export function ModelManager({
             }
           }}
           placeholder="provider/model-name"
-          className="soft-focus-ring min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)] outline-none"
+          className="soft-focus-ring min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--muted)] outline-none"
         />
         <button
           type="button"
           title={t.addModel}
           onClick={addModel}
-          className="soft-focus-ring inline-flex h-11 shrink-0 items-center gap-1 rounded-2xl premium-gradient px-4 py-2 text-sm font-semibold text-[var(--primary-contrast)] transition hover:bg-[var(--primary-strong)] active:translate-y-0"
+          className="soft-focus-ring inline-flex h-10 shrink-0 items-center gap-1 rounded-lg premium-gradient px-3.5 py-2 text-sm font-semibold text-[var(--primary-contrast)] transition hover:bg-[var(--primary-strong)] active:translate-y-0"
         >
           <Plus size={16} />
           {t.add}
@@ -107,28 +107,28 @@ export function ModelManager({
       </div>
 
       <div
-        className="grid max-h-72 gap-2 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2 sm:grid-cols-2"
+        className="grid max-h-72 gap-1.5 overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--surface)] p-1.5 sm:grid-cols-2"
       >
         {models.length === 0 ? (
-          <div className="px-3 py-3 text-sm text-[var(--muted)] sm:col-span-2">{t.empty}</div>
+          <div className="px-2.5 py-2.5 text-sm text-[var(--muted)] sm:col-span-2">{t.empty}</div>
         ) : null}
         {visibleModels.map((model, index) => (
           <div
             key={`${model}-${index}`}
             className={cn(
-              "group rounded-2xl border p-3 text-sm transition",
+              "group rounded-lg border px-2.5 py-2 text-sm transition",
               activeModel === model.trim()
                 ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-sm"
                 : "border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
             )}
           >
-            <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="mb-1.5 flex items-center justify-between gap-1.5">
               <button
                 type="button"
                 title={t.select}
                 onClick={() => onActiveModelChange(model.trim())}
                 className={cn(
-                  "soft-focus-ring inline-flex h-8 items-center gap-2 rounded-xl border px-2.5 text-xs font-medium transition",
+                  "soft-focus-ring inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-[11px] font-medium transition",
                   activeModel === model.trim()
                     ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
                     : "border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]",
@@ -141,7 +141,7 @@ export function ModelManager({
                 type="button"
                 title={t.remove}
                 onClick={() => removeModel(model)}
-                className="soft-focus-ring grid h-8 w-8 shrink-0 place-items-center rounded-xl text-[var(--muted)] opacity-100 transition hover:bg-[var(--surface-hover)] hover:text-[var(--danger)] sm:opacity-0 sm:group-hover:opacity-100"
+                className="soft-focus-ring grid h-7 w-7 shrink-0 place-items-center rounded-md text-[var(--muted)] opacity-100 transition hover:bg-[var(--surface-hover)] hover:text-[var(--danger)] sm:opacity-0 sm:group-hover:opacity-100"
               >
                 <Trash2 size={14} />
               </button>
@@ -150,7 +150,7 @@ export function ModelManager({
               value={model}
               onChange={(event) => updateModel(index, event.target.value)}
               onBlur={(event) => updateModel(index, event.target.value.trim())}
-              className="soft-focus-ring w-full rounded-xl border border-transparent bg-transparent px-2 py-1.5 font-mono text-xs text-[var(--text)] outline-none transition focus:border-[var(--border)] focus:bg-[var(--surface)]"
+              className="soft-focus-ring w-full rounded-md border border-transparent bg-transparent px-2 py-1 font-mono text-sm text-[var(--text)] outline-none transition focus:border-[var(--border)] focus:bg-[var(--surface)]"
             />
           </div>
         ))}
@@ -158,7 +158,7 @@ export function ModelManager({
           <button
             type="button"
             onClick={() => setVisibleCount((current) => Math.min(current + MODEL_PAGE_SIZE, models.length))}
-            className="soft-focus-ring rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-xs font-semibold text-[var(--muted-strong)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text)] sm:col-span-2"
+            className="soft-focus-ring rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5 text-xs font-semibold text-[var(--muted-strong)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text)] sm:col-span-2"
           >
             {t.loadMore} ({visibleModels.length}/{models.length})
           </button>

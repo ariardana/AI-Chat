@@ -233,16 +233,16 @@ export const ModelPicker = memo(function ModelPicker({
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "soft-focus-ring flex w-full min-w-0 items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] text-left transition hover:bg-[var(--surface-hover)]",
-          compact ? "px-3 py-2" : "px-3 py-3",
+          "soft-focus-ring flex w-full min-w-0 items-center justify-between gap-2.5 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] text-left transition hover:bg-[var(--surface-hover)]",
+          compact ? "px-2.5 py-1.5" : "px-2.5 py-2.5",
         )}
       >
         <span className="min-w-0">
-          <span className="block text-[10px] font-medium uppercase text-[var(--muted)]">{t.model}</span>
-          <span className="mt-1 block max-w-full truncate text-[11px] font-medium text-[var(--muted-strong)]">
+          <span className="block text-[9px] font-medium uppercase text-[var(--muted)]">{t.model}</span>
+          <span className="mt-0.5 block max-w-full truncate text-xs font-medium text-[var(--muted-strong)]">
             {activeModel ? getModelDisplayName(activeModel) : t.noModel}
           </span>
-          <span className={cn("mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold", STATUS_STYLES[activeAvailability])}>
+          <span className={cn("mt-1.5 inline-flex rounded-full border px-1.5 py-px text-[9px] font-semibold", STATUS_STYLES[activeAvailability])}>
             {statusLabel}
           </span>
         </span>
@@ -257,39 +257,39 @@ export const ModelPicker = memo(function ModelPicker({
             onClick={() => setOpen(false)}
             className="absolute inset-0"
           />
-          <section className="animate-soft-enter fixed inset-x-0 bottom-0 flex h-[85dvh] max-h-[85dvh] w-full max-w-full flex-col overflow-hidden overflow-x-hidden rounded-t-3xl border border-b-0 border-x-0 border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-2xl sm:relative sm:inset-auto sm:h-auto sm:max-h-[88dvh] sm:max-w-3xl sm:rounded-2xl sm:border">
-            <header className="sticky top-0 z-10 shrink-0 border-b border-[var(--border)] bg-[var(--surface)] px-4 pb-3 pt-4">
-              <div className="flex items-center gap-3">
+          <section className="animate-soft-enter fixed inset-x-0 bottom-0 flex h-[85dvh] max-h-[85dvh] w-full max-w-full flex-col overflow-hidden overflow-x-hidden rounded-t-2xl border border-b-0 border-x-0 border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-2xl sm:relative sm:inset-auto sm:h-auto sm:max-h-[88dvh] sm:max-w-3xl sm:rounded-xl sm:border">
+            <header className="sticky top-0 z-10 shrink-0 border-b border-[var(--border)] bg-[var(--surface)] px-3 pb-2.5 pt-3">
+              <div className="flex items-center gap-2.5">
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold">{t.model}</div>
-                  <div className="truncate text-xs text-[var(--muted)]">{providerName || getModelProvider(activeModel)}</div>
+                  <div className="text-[13px] font-semibold">{t.model}</div>
+                  <div className="truncate text-[11px] text-[var(--muted)]">{providerName || getModelProvider(activeModel)}</div>
                 </div>
                 <button
                   type="button"
                   title={t.close}
                   onClick={() => setOpen(false)}
-                  className="soft-focus-ring grid h-8 w-8 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                  className="soft-focus-ring grid h-8 w-8 place-items-center rounded-md text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
                 >
                   <X size={17} />
                 </button>
               </div>
-              <div className="sticky top-0 z-10 mt-4 bg-[var(--surface)]">
+              <div className="sticky top-0 z-10 mt-3 bg-[var(--surface)]">
                 <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={t.search}
-                  className="soft-focus-ring h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] pl-9 pr-3 text-sm outline-none placeholder:text-[var(--muted)]"
+                  className="soft-focus-ring h-9 w-full rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] pl-8 pr-2.5 text-sm outline-none placeholder:text-[var(--muted)]"
                 />
               </div>
-              <div className="mt-3 flex flex-wrap gap-2 overflow-x-hidden pb-1">
+              <div className="mt-2.5 flex flex-wrap gap-1.5 overflow-x-hidden pb-0.5">
                 {filters.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setFilter(item.id)}
                     className={cn(
-                      "soft-focus-ring h-7 shrink-0 rounded-lg border px-2.5 text-[11px] font-semibold transition",
+                      "soft-focus-ring h-7 shrink-0 rounded-md border px-2 text-[10px] font-semibold transition",
                       filter === item.id
                         ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
                         : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]",
@@ -303,10 +303,10 @@ export const ModelPicker = memo(function ModelPicker({
 
             <div
               onScroll={handleModelListScroll}
-              className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:p-4"
+              className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:p-3"
             >
               {filteredModels.length ? (
-                <div className="grid max-w-full gap-2 overflow-x-hidden">
+                <div className="grid max-w-full gap-1.5 overflow-x-hidden">
                   {visibleModels.map((model) => {
                     const selected = model === activeModel;
                     const category = getModelCategory(model);
@@ -325,45 +325,45 @@ export const ModelPicker = memo(function ModelPicker({
                       <div
                         key={model}
                         className={cn(
-                          "max-w-full overflow-hidden rounded-lg border bg-[var(--surface-elevated)] p-3 transition",
+                          "max-w-full overflow-hidden rounded-md border bg-[var(--surface-elevated)] px-2.5 py-2 transition",
                           selected ? "border-[var(--primary)] shadow-[var(--shadow-glow)]" : "border-[var(--border)]",
                         )}
                       >
-                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+                        <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-2.5">
                           <button
                             type="button"
                             onClick={() => chooseModel(model)}
                             className="soft-focus-ring min-w-0 flex-1 text-left"
                           >
                             <div className="flex min-w-0 items-start gap-2">
-                              <div className="min-w-0 max-w-full overflow-hidden break-all font-mono text-xs font-semibold leading-5 text-[var(--text)] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                              <div className="min-w-0 max-w-full overflow-hidden break-all font-mono text-sm font-medium leading-5 text-[var(--text)] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
                                 {model}
                               </div>
                               {selected ? <Check size={15} className="shrink-0 text-[var(--primary)]" /> : null}
                             </div>
-                            <div className="mt-2 flex max-w-full flex-wrap items-center gap-1.5 overflow-hidden">
-                              <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[10px] font-semibold uppercase text-[var(--muted)]">
+                            <div className="mt-1.5 flex max-w-full flex-wrap items-center gap-1 overflow-hidden">
+                              <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-1.5 py-px text-[9px] font-semibold uppercase text-[var(--muted)]">
                                 {provider}
                               </span>
-                              <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[10px] font-semibold uppercase text-[var(--muted-strong)]">
+                              <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-1.5 py-px text-[9px] font-semibold uppercase text-[var(--muted-strong)]">
                                 {category}
                               </span>
-                              <span className={cn("rounded-full border px-1.5 py-0.5 text-[10px] font-semibold", STATUS_STYLES[status])}>
+                              <span className={cn("rounded-full border px-1.5 py-px text-[9px] font-semibold", STATUS_STYLES[status])}>
                                 {label}
                               </span>
                               {context ? (
-                                <span className="text-[10px] text-[var(--muted)]">
+                                <span className="text-[9px] text-[var(--muted)]">
                                   {t.context}: {context}
                                 </span>
                               ) : null}
                             </div>
-                            <div className="mt-2 flex max-w-full flex-wrap items-center gap-1.5 overflow-hidden">
+                            <div className="mt-1.5 flex max-w-full flex-wrap items-center gap-1 overflow-hidden">
                               {capabilityBadges(model).map((badge) => (
                                 <span
                                   key={badge.key}
                                   title={badge.title}
                                   className={cn(
-                                    "rounded-full border px-1.5 py-0.5 text-[10px] font-semibold",
+                                    "rounded-full border px-1.5 py-px text-[9px] font-semibold",
                                     CAPABILITY_STYLES[badge.key],
                                   )}
                                 >
@@ -376,7 +376,7 @@ export const ModelPicker = memo(function ModelPicker({
                             type="button"
                             onClick={() => onCheckModel(model)}
                             disabled={checkingModels[model] || category === "embedding"}
-                            className="soft-focus-ring inline-flex h-7 shrink-0 items-center gap-1 self-end rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 text-[11px] font-semibold text-[var(--muted-strong)] transition hover:bg-[var(--surface-hover)] disabled:opacity-50 sm:self-start"
+                            className="soft-focus-ring inline-flex h-7 shrink-0 items-center gap-1 self-end rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 text-[10px] font-semibold text-[var(--muted-strong)] transition hover:bg-[var(--surface-hover)] disabled:opacity-50 sm:self-start"
                           >
                             <FlaskConical size={12} />
                             {checkingModels[model] ? t.testing : t.test}
@@ -389,14 +389,14 @@ export const ModelPicker = memo(function ModelPicker({
                     <button
                       type="button"
                       onClick={showMoreModels}
-                      className="soft-focus-ring mt-1 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-xs font-semibold text-[var(--muted-strong)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                      className="soft-focus-ring mt-1 h-8 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-xs font-semibold text-[var(--muted-strong)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
                     >
                       {t.loadMore} ({visibleModels.length}/{filteredModels.length})
                     </button>
                   ) : null}
                 </div>
               ) : (
-                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-8 text-center text-sm text-[var(--muted)]">
+                <div className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-7 text-center text-sm text-[var(--muted)]">
                   {t.empty}
                 </div>
               )}
