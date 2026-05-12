@@ -117,9 +117,6 @@ export const ChatInput = memo(function ChatInput({
           )}
         </div>
       </form>
-      <p className="mx-auto mt-1 max-w-5xl text-center text-[10px] leading-3 text-[var(--muted)] opacity-55 sm:mt-2 sm:leading-4">
-        Created by Ari
-      </p>
     </div>
   );
 });

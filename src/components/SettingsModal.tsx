@@ -580,6 +580,7 @@ export function SettingsModal({
                 <div className="mb-3 text-sm font-semibold text-[var(--text)]">Mini Open WebUI</div>
                 <div className="space-y-2 text-sm text-[var(--muted)]">
                   <div>Versi 1.0.0</div>
+                  <div>Created by Ari</div>
                   <div>{isIndonesian ? "Mode penyimpanan lokal browser." : "Browser-local storage mode."}</div>
                   <div>{isIndonesian ? "Kompatibel dengan API OpenAI-compatible." : "Compatible with OpenAI-compatible APIs."}</div>
                 </div>
